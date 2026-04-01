@@ -38,6 +38,7 @@ public class LineEntryParserTests
     [InlineData("   ")]
     [InlineData(". Apple")]
     [InlineData("415.Apple")]
+    [InlineData("415 Apple")]
     [InlineData("415. ")]
     [InlineData("abc. Apple")]
     [InlineData("-1. Apple")]
@@ -58,5 +59,53 @@ public class LineEntryParserTests
         var parser = new LineEntryParser();
 
         Assert.Throws<FormatException>(() => parser.Parse("invalid"));
+    }
+}
+
+public class LineEntryComparerTests
+{
+    [Fact]
+    public void Compare_DifferentText_SortsByText()
+    {
+        var comparer = new LineEntryComparer();
+
+        var x = new LineEntry(10, "Apple");
+        var y = new LineEntry(1, "Banana");
+
+        Assert.True(comparer.Compare(x, y) < 0);
+        Assert.True(comparer.Compare(y, x) > 0);
+    }
+
+    [Fact]
+    public void Compare_SameText_SortsByNumberAscending()
+    {
+        var comparer = new LineEntryComparer();
+
+        var x = new LineEntry(2, "Apple");
+        var y = new LineEntry(10, "Apple");
+
+        Assert.True(comparer.Compare(x, y) < 0);
+        Assert.True(comparer.Compare(y, x) > 0);
+    }
+
+    [Fact]
+    public void Sort_MixedEntries_SortsByTextThenNumber()
+    {
+        var comparer = new LineEntryComparer();
+
+        var items = new List<LineEntry>
+        {
+            new(2, "Banana"),
+            new(10, "Apple"),
+            new(2, "Apple"),
+            new(1, "Banana"),
+        };
+
+        items.Sort(comparer);
+
+        Assert.Equal(new LineEntry(2, "Apple"), items[0]);
+        Assert.Equal(new LineEntry(10, "Apple"), items[1]);
+        Assert.Equal(new LineEntry(1, "Banana"), items[2]);
+        Assert.Equal(new LineEntry(2, "Banana"), items[3]);
     }
 }
