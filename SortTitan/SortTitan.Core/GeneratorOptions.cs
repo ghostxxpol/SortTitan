@@ -1,6 +1,6 @@
-namespace SortTitan.Core;
-
 using System.Text;
+
+namespace SortTitan.Core;
 
 public sealed record class GeneratorOptions
 {

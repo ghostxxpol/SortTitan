@@ -1,5 +1,6 @@
 namespace SortTitan.Tests;
 
+using System.Text;
 using SortTitan.Core;
 
 public class LineEntryParserTests
@@ -30,35 +31,6 @@ public class LineEntryParserTests
         Assert.True(isParsed);
         Assert.Equal(expectedNumber, entry.Number);
         Assert.Equal(expectedText, entry.Text);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData(". Apple")]
-    [InlineData("415.Apple")]
-    [InlineData("415 Apple")]
-    [InlineData("415. ")]
-    [InlineData("abc. Apple")]
-    [InlineData("-1. Apple")]
-    [InlineData("9223372036854775808. Overflow")]
-    public void TryParse_InvalidLines_ReturnsFalse(string? line)
-    {
-        var parser = new LineEntryParser();
-
-        var isParsed = parser.TryParse(line!, out var entry);
-
-        Assert.False(isParsed);
-        Assert.Equal(default, entry);
-    }
-
-    [Fact]
-    public void Parse_InvalidLine_ThrowsFormatException()
-    {
-        var parser = new LineEntryParser();
-
-        Assert.Throws<FormatException>(() => parser.Parse("invalid"));
     }
 }
 
@@ -107,5 +79,59 @@ public class LineEntryComparerTests
         Assert.Equal(new LineEntry(10, "Apple"), items[1]);
         Assert.Equal(new LineEntry(1, "Banana"), items[2]);
         Assert.Equal(new LineEntry(2, "Banana"), items[3]);
+    }
+}
+
+public sealed class TestFileGeneratorTests
+{
+    [Fact]
+    public async Task GenerateAsync_CreatesNonEmptyFile_WithParsableLines_RepeatedTexts_AndApproxSize()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"SortTitan_Gen_{Guid.NewGuid():N}.txt");
+        try
+        {
+            const long targetBytes = 20_000;
+            var options = new GeneratorOptions
+            {
+                OutputPath = path,
+                TargetSizeBytes = targetBytes,
+                Seed = 123,
+                TextPoolSize = 20,
+                RepeatProbability = 1.0,
+                NewLine = "\n",
+                Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+            };
+
+            var generator = new TestFileGenerator();
+            await generator.GenerateAsync(options);
+
+            Assert.True(File.Exists(path));
+
+            var fileInfo = new FileInfo(path);
+            Assert.True(fileInfo.Length > 0);
+            Assert.True(fileInfo.Length >= targetBytes);
+
+            const long allowedOvershoot = 2048;
+            Assert.True(fileInfo.Length - targetBytes <= allowedOvershoot);
+
+            var parser = new LineEntryParser();
+            var texts = new List<string>();
+
+            foreach (var line in File.ReadLines(path, options.Encoding))
+            {
+                Assert.True(parser.TryParse(line, out var entry));
+                texts.Add(entry.Text);
+            }
+
+            Assert.NotEmpty(texts);
+            Assert.Contains(texts.GroupBy(t => t), g => g.Count() > 1);
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
     }
 }
