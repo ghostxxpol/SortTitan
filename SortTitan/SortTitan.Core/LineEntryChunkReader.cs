@@ -20,6 +20,7 @@ public sealed class LineEntryChunkReader
             throw new ArgumentException("InputPath is required.", nameof(options));
         }
 
+        var totalBudgetBytes = options.GetTotalMemoryBudgetBytes();
         var perChunkBudgetBytes = options.GetPerChunkMemoryBudgetBytes();
         var maxEntries = Math.Max(1, options.MaxEntriesPerChunk);
 
@@ -64,6 +65,22 @@ public sealed class LineEntryChunkReader
 
             entries.Add(entry);
             estimatedBytes += EstimateEntryBytes(entry);
+
+            if (entries.Count % 10000 == 0 && GC.GetTotalMemory(forceFullCollection: false) > totalBudgetBytes)
+            {
+                yield return new LineEntryChunk
+                {
+                    Entries = entries,
+                    EstimatedMemoryBytes = estimatedBytes,
+                    FirstLineNumber = chunkStartLine,
+                    LastLineNumber = lineNumber,
+                };
+
+                entries = new List<LineEntry>(capacity: initialCapacity);
+                estimatedBytes = 0;
+                chunkStartLine = lineNumber + 1;
+                continue;
+            }
 
             if (entries.Count >= maxEntries || estimatedBytes >= perChunkBudgetBytes)
             {

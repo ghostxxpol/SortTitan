@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System.Globalization;
+﻿﻿﻿﻿﻿using System.Globalization;
 using SortTitan.Core;
 
 static int PrintUsage(string? error = null)
@@ -22,6 +22,7 @@ static int PrintUsage(string? error = null)
     Console.WriteLine("  --temp <dir>             Temp directory (default: %TEMP%\\SortTitan)");
     Console.WriteLine("  --mem-frac <double>      Memory budget fraction 0..1 (default: 0.25)");
     Console.WriteLine("  --mem-bytes <long>       Total memory budget override in bytes (optional)");
+    Console.WriteLine("  --mem-safety <double>    Safety factor for memory accounting (default: 3.0)");
     Console.WriteLine("  --max-inflight <int>     Max in-flight chunks (default: 1)");
     Console.WriteLine("  --max-entries <int>      Max entries per chunk (optional)");
     Console.WriteLine("  --spill-parallelism <int>  Max concurrent temp writes (default: 1)");
@@ -113,6 +114,17 @@ if (!string.IsNullOrWhiteSpace(memBytesText))
     memBytesOverride = memBytesValue;
 }
 
+double memSafety = 3.0;
+var memSafetyText = GetOptionOrNull(args, "--mem-safety");
+if (!string.IsNullOrWhiteSpace(memSafetyText))
+{
+    if (!double.TryParse(memSafetyText, NumberStyles.Float, CultureInfo.InvariantCulture, out memSafety) || memSafety <= 0)
+    {
+        Environment.ExitCode = PrintUsage("Invalid --mem-safety. Must be a number > 0.");
+        return;
+    }
+}
+
 var maxInflight = 1;
 var maxInflightText = GetOptionOrNull(args, "--max-inflight");
 if (!string.IsNullOrWhiteSpace(maxInflightText))
@@ -181,7 +193,9 @@ var options = new ExternalFileSorterOptions
     MaxConcurrentSpills = spillParallelism,
     MemoryBudgetFraction = memFrac,
     TotalMemoryBudgetBytesOverride = memBytesOverride,
+    MemoryBudgetSafetyFactor = memSafety,
     MaxInFlightChunks = maxInflight,
+    MaxEntriesPerChunk = maxEntries,
     KeepTempFilesOnError = keepTempOnError,
 };
 

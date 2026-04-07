@@ -61,7 +61,9 @@ public sealed class ExternalFileSorter
                 InputPath = options.InputPath,
                 MemoryBudgetFraction = options.MemoryBudgetFraction,
                 TotalMemoryBudgetBytesOverride = options.TotalMemoryBudgetBytesOverride,
+                MemoryBudgetSafetyFactor = options.MemoryBudgetSafetyFactor,
                 MaxInFlightChunks = options.MaxInFlightChunks,
+                MaxEntriesPerChunk = options.MaxEntriesPerChunk,
                 InvalidLineHandling = InvalidLineHandling.Throw,
             };
 

@@ -17,6 +17,7 @@ Input bytes: 5368709139
 Temp bytes:  5529808161
 Approx I/O bytes: 16267226439
 ---
+
 --mem-bytes 8589934592 
 --max-inflight 2 
 --spill-parallelism 1 
@@ -32,4 +33,31 @@ Input bytes: 5368709139
 Temp bytes:  10898517300
 Approx I/O bytes: 21635935578
 --
+
 --spill-parallelism 2
+--merge-fanin 12
+Done. Wrote 5368709139 bytes.
+Total time: 00:06:53.7555438
+Split time: 00:03:55.4978573
+Merge time: 00:02:58.2551186
+Merge passes: 1
+Temp files: 37
+Input bytes: 5368709139
+Temp bytes:  10898517300
+Approx I/O bytes: 21635935578
+
+----max-inflight 4 
+--spill-parallelism 2
+--mem-bytes 3221225472
+--merge-fanin 12
+Done. Wrote 5368709139 bytes.
+Total time: 00:05:43.4352866
+Split time: 00:02:27.2371243
+Merge time: 00:03:16.1935778
+Merge passes: 1
+Temp files: 74
+Input bytes: 5368709139
+Temp bytes:  10898517300
+Approx I/O bytes: 21635935578
+
+

@@ -6,6 +6,7 @@ public sealed record class ChunkReaderOptions
 
     public double MemoryBudgetFraction { get; init; } = 0.25;
     public long? TotalMemoryBudgetBytesOverride { get; init; }
+    public double MemoryBudgetSafetyFactor { get; init; } = 3.0;
 
     public int MaxInFlightChunks { get; init; } = 1;
     public int MaxEntriesPerChunk { get; init; } = int.MaxValue;
@@ -32,6 +33,7 @@ public sealed record class ChunkReaderOptions
     {
         var total = GetTotalMemoryBudgetBytes();
         var chunks = Math.Max(1, MaxInFlightChunks);
-        return Math.Max(1024, total / chunks);
+        var safety = MemoryBudgetSafetyFactor <= 0 ? 1.0 : MemoryBudgetSafetyFactor;
+        return Math.Max(1024, (long)((total / (double)chunks) / safety));
     }
 }

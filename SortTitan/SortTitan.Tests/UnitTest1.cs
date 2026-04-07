@@ -388,6 +388,7 @@ public sealed class ExternalFileSorterIntegrationTests
             TempDirectory = tempDir,
             TotalMemoryBudgetBytesOverride = 256 * 1024,
             MaxInFlightChunks = 1,
+            MaxEntriesPerChunk = maxEntriesPerChunk,
         };
     }
 

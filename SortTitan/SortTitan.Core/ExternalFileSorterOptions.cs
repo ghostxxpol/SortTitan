@@ -12,7 +12,9 @@ public sealed record class ExternalFileSorterOptions
 
     public double MemoryBudgetFraction { get; init; } = 0.25;
     public long? TotalMemoryBudgetBytesOverride { get; init; }
+    public double MemoryBudgetSafetyFactor { get; init; } = 3.0;
     public int MaxInFlightChunks { get; init; } = 1;
+    public int MaxEntriesPerChunk { get; init; } = int.MaxValue;
 
     public bool KeepTempFilesOnError { get; init; } = true;
 }
