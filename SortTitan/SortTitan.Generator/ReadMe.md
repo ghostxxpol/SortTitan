@@ -1,0 +1,3 @@
+﻿dotnet run --project SortTitan.Generator -- --output "d:\Work\SortTitan\gen_100gb.txt" --size 107374182400 --seed 123 --text-pool 100000 --repeat 0.95
+dotnet run --project SortTitan.Generator -- --output "d:\Work\SortTitan\gen_1mb.txt" --size 1048576 --seed 123 --text-pool 1000 --repeat 0.9
+dotnet run --project SortTitan.Generator -- --output "d:\Work\SortTitan\gen_5gb.txt" --size 5368709120 --seed 123 --text-pool 1000 --repeat 0.9

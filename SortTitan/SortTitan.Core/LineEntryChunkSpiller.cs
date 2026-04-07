@@ -33,13 +33,32 @@ public sealed class LineEntryChunkSpiller
             throw new ArgumentException("Temp file path is required.", nameof(tempFilePath));
         }
 
+        chunk.Entries.Sort(_comparer);
+        await SpillAlreadySortedAsync(chunk, tempFilePath, cancellationToken);
+    }
+
+    public async Task SpillAlreadySortedAsync(LineEntryChunk chunk, string tempFilePath, CancellationToken cancellationToken = default)
+    {
+        if (chunk is null)
+        {
+            throw new ArgumentNullException(nameof(chunk));
+        }
+
+        if (chunk.Entries is null)
+        {
+            throw new ArgumentException("Chunk entries are required.", nameof(chunk));
+        }
+
+        if (string.IsNullOrWhiteSpace(tempFilePath))
+        {
+            throw new ArgumentException("Temp file path is required.", nameof(tempFilePath));
+        }
+
         var directory = Path.GetDirectoryName(tempFilePath);
         if (!string.IsNullOrWhiteSpace(directory))
         {
             Directory.CreateDirectory(directory);
         }
-
-        chunk.Entries.Sort(_comparer);
 
         await using var fileStream = new FileStream(
             tempFilePath,
@@ -50,15 +69,15 @@ public sealed class LineEntryChunkSpiller
             useAsync: true);
 
         await using var writer = new StreamWriter(fileStream, Utf8NoBom);
-        writer.NewLine = "\n";
 
         foreach (var entry in chunk.Entries)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var line = $"{entry.Number}. {entry.Text}";
-            await writer.WriteAsync(line.AsMemory(), cancellationToken);
-            await writer.WriteAsync(writer.NewLine.AsMemory(), cancellationToken);
+            writer.Write(entry.Number);
+            writer.Write(". ");
+            writer.Write(entry.Text);
+            writer.Write(writer.NewLine);
         }
 
         await writer.FlushAsync(cancellationToken);

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿﻿﻿﻿﻿﻿using System.Diagnostics;
+using System.Globalization;
 using SortTitan.Core;
 
 static int PrintUsage(string? error = null)
@@ -144,7 +145,7 @@ if (!string.IsNullOrWhiteSpace(textPoolText))
 var repeatText = GetOptionOrNull(args, "--repeat");
 if (!string.IsNullOrWhiteSpace(repeatText))
 {
-    if (!double.TryParse(repeatText, out var repeatValue))
+    if (!double.TryParse(repeatText, NumberStyles.Float, CultureInfo.InvariantCulture, out var repeatValue) || repeatValue is < 0 or > 1)
     {
         Environment.ExitCode = PrintUsage("Invalid --repeat. Must be a number in range 0..1.");
         return;

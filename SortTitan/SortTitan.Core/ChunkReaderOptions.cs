@@ -14,10 +14,10 @@ public sealed record class ChunkReaderOptions
 
     public long GetTotalMemoryBudgetBytes()
     {
-        if (TotalMemoryBudgetBytesOverride is { } value)
-        {
-            return value;
-        }
+         if (TotalMemoryBudgetBytesOverride.HasValue)
+         {
+             return (long)TotalMemoryBudgetBytesOverride;
+         }
 
         var available = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
         if (available <= 0)
@@ -32,6 +32,6 @@ public sealed record class ChunkReaderOptions
     {
         var total = GetTotalMemoryBudgetBytes();
         var chunks = Math.Max(1, MaxInFlightChunks);
-        return Math.Max(1, total / chunks);
+        return Math.Max(1024, total / chunks);
     }
 }

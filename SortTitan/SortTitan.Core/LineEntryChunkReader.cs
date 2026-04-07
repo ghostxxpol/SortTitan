@@ -38,7 +38,8 @@ public sealed class LineEntryChunkReader
             bufferSize: 1024 * 1024,
             leaveOpen: false);
 
-        var entries = new List<LineEntry>(capacity: 64 * 1024);
+        var initialCapacity = EstimateInitialCapacity(perChunkBudgetBytes, maxEntries);
+        var entries = new List<LineEntry>(capacity: initialCapacity);
         long estimatedBytes = 0;
 
         long lineNumber = 0;
@@ -58,10 +59,7 @@ public sealed class LineEntryChunkReader
 
             if (!_parser.TryParse(line, out var entry))
             {
-                if (options.InvalidLineHandling == InvalidLineHandling.Throw)
-                {
-                    throw new InvalidDataException($"Invalid line at {lineNumber}.");
-                }
+                throw new InvalidDataException($"Invalid line at {lineNumber}.");
             }
 
             entries.Add(entry);
@@ -77,7 +75,7 @@ public sealed class LineEntryChunkReader
                     LastLineNumber = lineNumber,
                 };
 
-                entries = new List<LineEntry>(capacity: 64 * 1024);
+                entries = new List<LineEntry>(capacity: initialCapacity);
                 estimatedBytes = 0;
                 chunkStartLine = lineNumber + 1;
             }
@@ -98,5 +96,25 @@ public sealed class LineEntryChunkReader
     private static long EstimateEntryBytes(LineEntry entry)
     {
         return 64 + (entry.Text.Length * sizeof(char));
+    }
+
+    private static int EstimateInitialCapacity(long perChunkBudgetBytes, int maxEntriesPerChunk)
+    {
+        const int minCapacity = 4 * 1024;
+        const long estimatedBytesPerEntry = 384;
+
+        if (perChunkBudgetBytes <= 0)
+        {
+            return minCapacity;
+        }
+
+        var byBudget = perChunkBudgetBytes / estimatedBytesPerEntry;
+        if (byBudget <= minCapacity)
+        {
+            return minCapacity;
+        }
+
+        var byBudgetInt = byBudget >= int.MaxValue ? int.MaxValue : (int)byBudget;
+        return Math.Min(byBudgetInt, maxEntriesPerChunk);
     }
 }
