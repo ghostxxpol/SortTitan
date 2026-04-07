@@ -150,7 +150,6 @@ public sealed class ExternalSortMergePhase
                 useAsync: true);
 
             await using var writer = new StreamWriter(outputStream, Utf8NoBom);
-            writer.NewLine = "\n";
 
             while (heap.Count > 0)
             {

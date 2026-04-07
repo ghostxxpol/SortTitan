@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿using System.Globalization;
+﻿﻿﻿﻿﻿﻿using System.Globalization;
 using SortTitan.Core;
 
 static int PrintUsage(string? error = null)
@@ -216,6 +216,13 @@ try
     Console.WriteLine("Sorting...");
 
     var metrics = await sorter.SortWithMetricsAsync(options, cts.Token);
+
+    if (metrics.InputBytes == 0 && metrics.TempFilesCount == 0)
+    {
+        Console.WriteLine("Input file is empty. Nothing to sort.");
+        Environment.ExitCode = 0;
+        return;
+    }
 
     Console.WriteLine($"Done. Wrote {metrics.OutputBytes} bytes.");
     Console.WriteLine($"Total time: {metrics.TotalTime}");

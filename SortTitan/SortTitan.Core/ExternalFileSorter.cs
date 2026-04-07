@@ -64,7 +64,6 @@ public sealed class ExternalFileSorter
                 MemoryBudgetSafetyFactor = options.MemoryBudgetSafetyFactor,
                 MaxInFlightChunks = options.MaxInFlightChunks,
                 MaxEntriesPerChunk = options.MaxEntriesPerChunk,
-                InvalidLineHandling = InvalidLineHandling.Throw,
             };
 
             var splitOptions = new ExternalSortSplitPhaseOptions
@@ -84,21 +83,6 @@ public sealed class ExternalFileSorter
 
             if (runFiles.Count == 0)
             {
-                var outputDir = Path.GetDirectoryName(options.OutputPath);
-                if (!string.IsNullOrWhiteSpace(outputDir))
-                {
-                    Directory.CreateDirectory(outputDir);
-                }
-
-                await using var outputStream = new FileStream(
-                    options.OutputPath,
-                    FileMode.Create,
-                    FileAccess.Write,
-                    FileShare.Read,
-                    bufferSize: 1024 * 1024,
-                    useAsync: true);
-
-                await outputStream.FlushAsync(cancellationToken);
                 success = true;
                 totalStopwatch.Stop();
 
@@ -111,7 +95,7 @@ public sealed class ExternalFileSorter
                     TempFilesCount = 0,
                     InputBytes = GetFileSize(options.InputPath),
                     TempBytes = 0,
-                    OutputBytes = GetFileSize(options.OutputPath),
+                    OutputBytes = 0,
                 };
             }
 

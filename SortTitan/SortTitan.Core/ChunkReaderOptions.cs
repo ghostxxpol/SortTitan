@@ -11,8 +11,6 @@ public sealed record class ChunkReaderOptions
     public int MaxInFlightChunks { get; init; } = 1;
     public int MaxEntriesPerChunk { get; init; } = int.MaxValue;
 
-    public InvalidLineHandling InvalidLineHandling { get; init; } = InvalidLineHandling.Throw;
-
     public long GetTotalMemoryBudgetBytes()
     {
          if (TotalMemoryBudgetBytesOverride.HasValue)

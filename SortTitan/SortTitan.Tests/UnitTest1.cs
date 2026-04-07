@@ -141,7 +141,7 @@ public sealed class ExternalFileSorterIntegrationTests
     private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
     [Fact]
-    public async Task SortAsync_EmptyFile_CreatesEmptyOutput()
+    public async Task SortAsync_EmptyFile_DoesNotCreateOutput()
     {
         var testDir = CreateTempDirectory();
         try
@@ -154,8 +154,7 @@ public sealed class ExternalFileSorterIntegrationTests
 
             await SortAsync(inputPath, outputPath, tempDir);
 
-            Assert.True(File.Exists(outputPath));
-            Assert.Empty(File.ReadAllLines(outputPath, Utf8NoBom));
+            Assert.False(File.Exists(outputPath));
         }
         finally
         {
