@@ -31,25 +31,28 @@ jobs:
         run: dotnet test SortTitan/SortTitan.sln -c Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
       - name: Enforce coverage threshold (>= 50%)
+        shell: pwsh
         run: |
-          python3 - << 'PY'
-          import glob
-          import xml.etree.ElementTree as ET
+          $files = Get-ChildItem -Path "TestResults" -Recurse -Filter "coverage.cobertura.xml" -ErrorAction SilentlyContinue
+          if (-not $files -or $files.Count -eq 0) {
+            throw "coverage.cobertura.xml not found"
+          }
 
-          files = glob.glob("TestResults/**/coverage.cobertura.xml", recursive=True)
-          if not files:
-            raise SystemExit("coverage.cobertura.xml not found")
+          $path = $files[0].FullName
+          [xml]$xml = Get-Content -Path $path
+          $rateText = $xml.coverage.'line-rate'
+          if (-not $rateText) {
+            $rateText = "0"
+          }
 
-          path = files[0]
-          root = ET.parse(path).getroot()
-          rate = float(root.attrib.get("line-rate", "0"))
-          pct = rate * 100.0
-          print(f"Coverage file: {path}")
-          print(f"Line coverage: {pct:.2f}%")
+          $rate = [double]$rateText
+          $pct = $rate * 100.0
+          Write-Host "Coverage file: $path"
+          Write-Host ("Line coverage: {0:N2}%" -f $pct)
 
-          if pct < 50.0:
-            raise SystemExit(f"Coverage below threshold: {pct:.2f}% < 50.00%")
-          PY
+          if ($pct -lt 50.0) {
+            throw ("Coverage below threshold: {0:N2}% < 50.00%" -f $pct)
+          }
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v6
