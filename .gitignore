@@ -63,6 +63,7 @@ desktop.ini
 
 docker-compose.override.yml
 *.dockerignore
+!.dockerignore
 
 .env
 .env.*
