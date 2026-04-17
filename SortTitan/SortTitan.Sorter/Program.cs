@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿using System.Globalization;
+﻿using System.Globalization;
 using SortTitan.Core;
 
 static int PrintUsage(string? error = null)
@@ -8,7 +8,7 @@ static int PrintUsage(string? error = null)
         Console.Error.WriteLine(error);
         Console.Error.WriteLine();
     }
-
+//Test for PR
     Console.WriteLine("SortTitan.Sorter");
     Console.WriteLine("Sorts a file with lines in format: <Number>. <String>");
     Console.WriteLine("Order: Text (Ordinal), then Number (ascending).");
