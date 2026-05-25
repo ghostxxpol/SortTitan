@@ -74,7 +74,7 @@ jobs:
             $executed = 0
             $passed = 0
             $failed = 0
-            $error = 0
+            $errorCount = 0
             $notExecuted = 0
 
             foreach ($file in $trxFiles) {
@@ -86,7 +86,7 @@ jobs:
                   $executed += [int]$c.executed
                   $passed += [int]$c.passed
                   $failed += [int]$c.failed
-                  $error += [int]$c.error
+                  $errorCount += [int]$c.error
                   $notExecuted += [int]$c.notExecuted
                 }
               } catch {
@@ -96,7 +96,7 @@ jobs:
             "" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
             "| Total | Executed | Passed | Failed | Error | Not executed |" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
             "| ---: | ---: | ---: | ---: | ---: | ---: |" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
-            ("| {0} | {1} | {2} | {3} | {4} | {5} |" -f $total, $executed, $passed, $failed, $error, $notExecuted) | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+            ("| {0} | {1} | {2} | {3} | {4} | {5} |" -f $total, $executed, $passed, $failed, $errorCount, $notExecuted) | Out-File -FilePath $summaryPath -Encoding utf8 -Append
           }
 
           "" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
