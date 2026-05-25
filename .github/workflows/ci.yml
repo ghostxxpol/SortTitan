@@ -28,7 +28,7 @@ jobs:
         run: dotnet restore SortTitan/SortTitan.sln
 
       - name: Test (with coverage)
-        run: dotnet test SortTitan/SortTitan.sln -c Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        run: dotnet test SortTitan/SortTitan.sln -c Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults --logger "trx;LogFileName=test_results.trx"
 
       - name: Enforce coverage threshold (>= 50%)
         shell: pwsh
@@ -53,6 +53,72 @@ jobs:
           if ($pct -lt 50.0) {
             throw ("Coverage below threshold: {0:N2}% < 50.00%" -f $pct)
           }
+
+      - name: Job summary (tests + coverage)
+        if: always()
+        shell: pwsh
+        run: |
+          $summaryPath = $env:GITHUB_STEP_SUMMARY
+          if (-not $summaryPath) {
+            throw "GITHUB_STEP_SUMMARY is not set"
+          }
+
+          "## Test Results" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+
+          $trxFiles = Get-ChildItem -Path "TestResults" -Recurse -Filter "*.trx" -ErrorAction SilentlyContinue
+          if (-not $trxFiles) {
+            "" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+            "_No TRX files found (tests may not have run or failed before results were written)._ " | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+          } else {
+            $total = 0
+            $executed = 0
+            $passed = 0
+            $failed = 0
+            $error = 0
+            $notExecuted = 0
+
+            foreach ($file in $trxFiles) {
+              try {
+                [xml]$trx = Get-Content -Path $file.FullName
+                $c = $trx.TestRun.ResultSummary.Counters
+                if ($null -ne $c) {
+                  $total += [int]$c.total
+                  $executed += [int]$c.executed
+                  $passed += [int]$c.passed
+                  $failed += [int]$c.failed
+                  $error += [int]$c.error
+                  $notExecuted += [int]$c.notExecuted
+                }
+              } catch {
+              }
+            }
+
+            "" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+            "| Total | Executed | Passed | Failed | Error | Not executed |" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+            "| ---: | ---: | ---: | ---: | ---: | ---: |" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+            ("| {0} | {1} | {2} | {3} | {4} | {5} |" -f $total, $executed, $passed, $failed, $error, $notExecuted) | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+          }
+
+          "" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+          "## Code Coverage" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+
+          $coverageFiles = Get-ChildItem -Path "TestResults" -Recurse -Filter "coverage.cobertura.xml" -ErrorAction SilentlyContinue
+          if (-not $coverageFiles) {
+            "" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+            "_coverage.cobertura.xml not found._" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+            exit 0
+          }
+
+          $coveragePath = $coverageFiles[0].FullName
+          [xml]$cov = Get-Content -Path $coveragePath
+          $rateText = $cov.coverage.'line-rate'
+          if (-not $rateText) { $rateText = "0" }
+          $rate = [double]$rateText
+          $pct = $rate * 100.0
+
+          "" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+          ("Line coverage: **{0:N2}%**" -f $pct) | Out-File -FilePath $summaryPath -Encoding utf8 -Append
+          "" | Out-File -FilePath $summaryPath -Encoding utf8 -Append
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v6
